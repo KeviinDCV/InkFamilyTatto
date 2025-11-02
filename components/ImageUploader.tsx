@@ -67,7 +67,7 @@ export default function ImageUploader({ onImageUpload, onError }: ImageUploaderP
       <div
         {...getRootProps()}
         className={`
-          border-2 border-dashed p-12 text-center cursor-pointer transition-all duration-300
+          border-2 border-dashed p-6 sm:p-8 md:p-12 text-center cursor-pointer transition-all duration-300
           ${
             isDragActive || isDragging
               ? "border-gold bg-gold/10 shadow-lg shadow-gold/20"
@@ -81,11 +81,11 @@ export default function ImageUploader({ onImageUpload, onError }: ImageUploaderP
       >
         <input {...getInputProps()} />
         <div className="flex flex-col items-center">
-          <div className="relative mb-6">
+          <div className="relative mb-4 sm:mb-6">
             {/* Efecto de glow detrás del ícono */}
             <div className="absolute inset-0 bg-gold/20 rounded-full blur-2xl"></div>
             <svg
-              className="w-20 h-20 text-gold relative z-10"
+              className="w-16 h-16 sm:w-20 sm:h-20 text-gold relative z-10"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -98,27 +98,27 @@ export default function ImageUploader({ onImageUpload, onError }: ImageUploaderP
               />
             </svg>
           </div>
-          <p className="font-serif text-2xl font-bold text-gold mb-3 tracking-wide">
+          <p className="font-serif text-xl sm:text-2xl font-bold text-gold mb-3 tracking-wide">
             {isDragActive
               ? "SUELTA LA IMAGEN AQUÍ"
               : "ARRASTRA Y SUELTA TU IMAGEN"}
           </p>
-          <div className="w-16 h-px bg-gradient-gold my-4"></div>
-          <p className="text-sm text-text-muted mb-6 font-sans">o haz click para seleccionar</p>
+          <div className="w-12 sm:w-16 h-px bg-gradient-gold my-3 sm:my-4"></div>
+          <p className="text-xs sm:text-sm text-text-muted mb-4 sm:mb-6 font-sans">o haz click para seleccionar</p>
           <button 
             type="button"
-            className="px-8 py-3 bg-gradient-gold text-background font-sans font-bold tracking-wide hover:opacity-90 transition-all duration-300 transform hover:scale-105"
+            className="px-6 sm:px-8 py-2.5 sm:py-3 bg-gradient-gold text-background font-sans font-bold tracking-wide hover:opacity-90 transition-all duration-300 transform hover:scale-105 text-sm sm:text-base"
           >
             SELECCIONAR ARCHIVO
           </button>
-          <p className="text-xs text-text-muted mt-6 font-sans">
+          <p className="text-xs text-text-muted mt-4 sm:mt-6 font-sans">
             Formatos soportados: JPG, PNG, WebP · Máximo 10MB
           </p>
         </div>
       </div>
       {error && (
-        <div className="mt-6 p-4 bg-red-900/20 border border-red-500/50 backdrop-blur-sm">
-          <p className="text-sm text-red-400 font-sans">{error}</p>
+        <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-red-900/20 border border-red-500/50 backdrop-blur-sm">
+          <p className="text-xs sm:text-sm text-red-400 font-sans">{error}</p>
         </div>
       )}
     </div>

@@ -38,8 +38,8 @@ export default function StyleSelector({
   onStyleChange,
 }: StyleSelectorProps) {
   return (
-    <div className="mb-6">
-      <h3 className="font-sans text-lg font-semibold mb-4 text-gold-dark tracking-wide">
+    <div className="mb-4 sm:mb-6">
+      <h3 className="font-sans text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-gold-dark tracking-wide">
         ESTILO DE ESTÉNCIL
       </h3>
       <div className="space-y-2">
@@ -48,7 +48,7 @@ export default function StyleSelector({
             key={style.id}
             onClick={() => onStyleChange(style.id)}
             className={`
-              w-full text-left p-4 border-2 transition-all duration-300
+              w-full text-left p-3 sm:p-4 border-2 transition-all duration-300
               ${
                 selectedStyle === style.id
                   ? "border-gold bg-gold/10 shadow-md shadow-gold/20"
@@ -56,8 +56,8 @@ export default function StyleSelector({
               }
             `}
           >
-            <div className="font-sans font-semibold text-gold mb-1 tracking-wide">{style.name}</div>
-            <div className="text-sm text-text-muted font-sans">{style.description}</div>
+            <div className="font-sans font-semibold text-gold mb-1 tracking-wide text-sm sm:text-base">{style.name}</div>
+            <div className="text-xs sm:text-sm text-text-muted font-sans">{style.description}</div>
           </button>
         ))}
       </div>

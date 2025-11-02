@@ -39,9 +39,12 @@ export default function StencilPreview({
       if (canvas) {
         const { width, height } = img;
         
-        // Calcular tamaño que quepa en el contenedor (máx 600px altura, mantener aspect ratio)
-        const maxHeight = 580; // Un poco menos que el contenedor para padding
-        const maxWidth = 800; // Ancho máximo razonable
+        // Calcular tamaño que quepa en el contenedor según el tamaño de la pantalla
+        const isMobile = window.innerWidth < 640; // sm breakpoint
+        const isTablet = window.innerWidth < 768; // md breakpoint
+        
+        const maxHeight = isMobile ? 280 : isTablet ? 380 : 580;
+        const maxWidth = isMobile ? 350 : isTablet ? 500 : 800;
         
         let displayWidth = width;
         let displayHeight = height;
@@ -130,9 +133,12 @@ export default function StencilPreview({
         if (canvas) {
           const { width, height } = img;
           
-          // Calcular tamaño que quepa en el contenedor (máx 600px altura, mantener aspect ratio)
-          const maxHeight = 580; // Un poco menos que el contenedor para padding
-          const maxWidth = 800; // Ancho máximo razonable
+          // Calcular tamaño que quepa en el contenedor según el tamaño de la pantalla
+          const isMobile = window.innerWidth < 640; // sm breakpoint
+          const isTablet = window.innerWidth < 768; // md breakpoint
+          
+          const maxHeight = isMobile ? 280 : isTablet ? 380 : 580;
+          const maxWidth = isMobile ? 350 : isTablet ? 500 : 800;
           
           let displayWidth = width;
           let displayHeight = height;
@@ -172,18 +178,18 @@ export default function StencilPreview({
   }, [stencilImage]);
 
   return (
-    <div className="bg-dark-card border border-dark-border p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="font-serif text-3xl font-bold text-gold tracking-wide">VISTA PREVIA</h2>
+    <div className="bg-dark-card border border-dark-border p-4 sm:p-6">
+      <div className="flex items-center justify-between mb-4 sm:mb-6">
+        <h2 className="font-serif text-2xl sm:text-3xl font-bold text-gold tracking-wide">VISTA PREVIA</h2>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
         {/* Original Image */}
         <div>
-          <h3 className="font-sans text-lg font-semibold mb-3 text-gold-dark tracking-wide">
+          <h3 className="font-sans text-base sm:text-lg font-semibold mb-2 sm:mb-3 text-gold-dark tracking-wide">
             IMAGEN ORIGINAL
           </h3>
-          <div className="border-2 border-dark-border overflow-hidden bg-background h-[600px] flex items-center justify-center">
+          <div className="border-2 border-dark-border overflow-hidden bg-background h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px] flex items-center justify-center">
             <canvas
               ref={originalCanvasRef}
               className="max-w-full max-h-full object-contain"
@@ -194,15 +200,15 @@ export default function StencilPreview({
 
         {/* Stencil Preview */}
         <div>
-          <h3 className="font-sans text-lg font-semibold mb-3 text-gold-dark tracking-wide">
+          <h3 className="font-sans text-base sm:text-lg font-semibold mb-2 sm:mb-3 text-gold-dark tracking-wide">
             ESTÉNCIL PROCESADO (IA)
           </h3>
-          <div className="border-2 border-dark-border overflow-hidden bg-background relative h-[600px] flex items-center justify-center">
+          <div className="border-2 border-dark-border overflow-hidden bg-background relative h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px] flex items-center justify-center">
             {error && (
               <div className="absolute inset-0 flex items-center justify-center bg-background/95 backdrop-blur-sm z-10">
-                <div className="text-center p-4 max-w-md">
-                  <p className="text-red-400 font-semibold mb-2 font-sans text-lg">ERROR DE PROCESAMIENTO</p>
-                  <p className="text-sm text-text-muted mb-4 font-sans">{error}</p>
+                <div className="text-center p-3 sm:p-4 max-w-md mx-4">
+                  <p className="text-red-400 font-semibold mb-2 font-sans text-base sm:text-lg">ERROR DE PROCESAMIENTO</p>
+                  <p className="text-xs sm:text-sm text-text-muted mb-3 sm:mb-4 font-sans">{error}</p>
                   <p className="text-xs text-text-muted font-sans">
                     Si el error persiste, intenta con una imagen más pequeña o en otro formato.
                   </p>
@@ -212,21 +218,21 @@ export default function StencilPreview({
             {/* Botón para generar esténcil */}
             {!isProcessing && !stencilImage && canGenerate && (
               <div className="absolute inset-0 flex items-center justify-center bg-gradient-dark backdrop-blur-sm z-10">
-                <div className="text-center p-8">
-                  <h3 className="font-serif text-2xl font-bold text-gold mb-2 tracking-wide">
+                <div className="text-center p-4 sm:p-8 mx-4">
+                  <h3 className="font-serif text-xl sm:text-2xl font-bold text-gold mb-2 tracking-wide">
                     IMAGEN LISTA
                   </h3>
-                  <p className="text-text-muted mb-6 max-w-sm font-sans">
+                  <p className="text-text-muted mb-4 sm:mb-6 max-w-sm font-sans text-sm sm:text-base">
                     Selecciona un estilo en el panel de configuración y presiona el botón para generar tu esténcil con IA
                   </p>
                   <button
                     onClick={handleGenerateStencil}
                     disabled={!canGenerate}
-                    className="px-8 py-4 bg-gradient-gold text-background font-sans font-bold tracking-wide shadow-lg hover:opacity-90 transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                    className="px-6 sm:px-8 py-3 sm:py-4 bg-gradient-gold text-background font-sans font-bold tracking-wide shadow-lg hover:opacity-90 transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-sm sm:text-base"
                   >
                     GENERAR ESTÉNCIL CON IA
                   </button>
-                  <p className="text-xs text-text-muted mt-4 font-sans">
+                  <p className="text-xs text-text-muted mt-3 sm:mt-4 font-sans">
                     Estilo seleccionado: <strong className="text-gold">{selectedStyle}</strong>
                   </p>
                 </div>
@@ -234,14 +240,14 @@ export default function StencilPreview({
             )}
             {isProcessing && (
               <div className="absolute inset-0 flex items-center justify-center bg-background/95 backdrop-blur-sm z-10">
-                <div className="text-center">
+                <div className="text-center px-4">
                   <div className="relative">
-                    <div className="animate-spin rounded-full h-16 w-16 border-4 border-dark-border border-t-gold mx-auto mb-4"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 sm:h-16 sm:w-16 border-4 border-dark-border border-t-gold mx-auto mb-3 sm:mb-4"></div>
                   </div>
-                  <p className="text-gold font-semibold text-lg mb-1 font-sans tracking-wide">
+                  <p className="text-gold font-semibold text-base sm:text-lg mb-1 font-sans tracking-wide">
                     GENERANDO CON IA...
                   </p>
-                  <p className="text-text-muted text-sm font-sans">
+                  <p className="text-text-muted text-xs sm:text-sm font-sans">
                     Calidad Ultra Alta (2048x2048) • ~15-30 segundos
                   </p>
                 </div>
@@ -258,10 +264,10 @@ export default function StencilPreview({
 
       {/* Regenerar Button */}
       {!isProcessing && !error && stencilImage && (
-        <div className="mt-6 text-center">
+        <div className="mt-4 sm:mt-6 text-center">
           <button
             onClick={handleGenerateStencil}
-            className="px-6 py-3 bg-gradient-gold text-background font-sans font-semibold tracking-wide hover:opacity-90 transform hover:scale-105 transition-all duration-300 shadow-lg"
+            className="px-5 sm:px-6 py-2.5 sm:py-3 bg-gradient-gold text-background font-sans font-semibold tracking-wide hover:opacity-90 transform hover:scale-105 transition-all duration-300 shadow-lg text-sm sm:text-base"
           >
             GENERAR CON OTRO ESTILO
           </button>
