@@ -12,9 +12,6 @@ export default function EditorPage() {
   const [image, setImage] = useState<string | null>(null);
   const [stencilImage, setStencilImage] = useState<string | null>(null);
   const [selectedStyle, setSelectedStyle] = useState<string>("classic");
-  const [lineColor, setLineColor] = useState<string>("#000000");
-  const [threshold, setThreshold] = useState<number>(80); // Valor medio para ver cambios fácilmente
-  const [pngOutline, setPngOutline] = useState<boolean>(true);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
 
   const handleImageUpload = useCallback((imageData: string) => {
@@ -88,9 +85,6 @@ export default function EditorPage() {
                 originalImage={image}
                 stencilImage={stencilImage}
                 isProcessing={isProcessing}
-                lineColor={lineColor}
-                pngOutline={pngOutline}
-                threshold={threshold}
                 selectedStyle={selectedStyle}
                 onProcessingStart={handleProcessingStart}
                 onStencilGenerated={handleStencilGenerated}
@@ -111,12 +105,6 @@ export default function EditorPage() {
                 />
 
                 <SettingsPanel
-                  lineColor={lineColor}
-                  onLineColorChange={setLineColor}
-                  threshold={threshold}
-                  onThresholdChange={setThreshold}
-                  pngOutline={pngOutline}
-                  onPngOutlineChange={setPngOutline}
                   stencilImage={stencilImage}
                 />
               </div>
@@ -129,7 +117,7 @@ export default function EditorPage() {
                   }}
                   className="w-full px-4 py-3 bg-gradient-gold text-background hover:opacity-90 transition-all duration-300 transform hover:scale-105 font-sans font-bold tracking-wide"
                 >
-                  🔄 SUBIR NUEVA IMAGEN
+                  SUBIR NUEVA IMAGEN
                 </button>
               </div>
             </div>

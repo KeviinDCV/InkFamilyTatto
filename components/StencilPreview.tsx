@@ -6,9 +6,6 @@ interface StencilPreviewProps {
   originalImage: string;
   stencilImage: string | null;
   isProcessing: boolean;
-  lineColor: string;
-  pngOutline: boolean;
-  threshold: number;
   selectedStyle: string;
   onProcessingStart: () => void;
   onStencilGenerated: (stencilData: string) => void;
@@ -18,9 +15,6 @@ export default function StencilPreview({
   originalImage,
   stencilImage,
   isProcessing,
-  lineColor,
-  pngOutline,
-  threshold,
   selectedStyle,
   onProcessingStart,
   onStencilGenerated,
@@ -43,16 +37,37 @@ export default function StencilPreview({
     img.onload = () => {
       const canvas = originalCanvasRef.current;
       if (canvas) {
-        // Usar tamaño REAL de la imagen (no reducir)
         const { width, height } = img;
+        
+        // Calcular tamaño que quepa en el contenedor (máx 600px altura, mantener aspect ratio)
+        const maxHeight = 580; // Un poco menos que el contenedor para padding
+        const maxWidth = 800; // Ancho máximo razonable
+        
+        let displayWidth = width;
+        let displayHeight = height;
+        
+        // Si la imagen es más grande que el contenedor, escalarla
+        if (height > maxHeight || width > maxWidth) {
+          const aspectRatio = width / height;
+          
+          if (height > maxHeight) {
+            displayHeight = maxHeight;
+            displayWidth = maxHeight * aspectRatio;
+          }
+          
+          if (displayWidth > maxWidth) {
+            displayWidth = maxWidth;
+            displayHeight = maxWidth / aspectRatio;
+          }
+        }
 
-        canvas.width = width;
-        canvas.height = height;
+        canvas.width = displayWidth;
+        canvas.height = displayHeight;
         const ctx = canvas.getContext("2d");
         if (ctx) {
-          // Desactivar suavizado para imágenes nítidas
-          ctx.imageSmoothingEnabled = false;
-          ctx.drawImage(img, 0, 0, width, height);
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+          ctx.drawImage(img, 0, 0, displayWidth, displayHeight);
         }
       }
     };
@@ -113,17 +128,38 @@ export default function StencilPreview({
       img.onload = () => {
         const canvas = stencilCanvasRef.current;
         if (canvas) {
-          // Usar tamaño REAL de la imagen (2048x2048 de Pollinations)
           const { width, height } = img;
+          
+          // Calcular tamaño que quepa en el contenedor (máx 600px altura, mantener aspect ratio)
+          const maxHeight = 580; // Un poco menos que el contenedor para padding
+          const maxWidth = 800; // Ancho máximo razonable
+          
+          let displayWidth = width;
+          let displayHeight = height;
+          
+          // Si la imagen es más grande que el contenedor, escalarla
+          if (height > maxHeight || width > maxWidth) {
+            const aspectRatio = width / height;
+            
+            if (height > maxHeight) {
+              displayHeight = maxHeight;
+              displayWidth = maxHeight * aspectRatio;
+            }
+            
+            if (displayWidth > maxWidth) {
+              displayWidth = maxWidth;
+              displayHeight = maxWidth / aspectRatio;
+            }
+          }
 
-          canvas.width = width;
-          canvas.height = height;
+          canvas.width = displayWidth;
+          canvas.height = displayHeight;
           const ctx = canvas.getContext("2d");
           if (ctx) {
-            // Desactivar suavizado para máxima nitidez
-            ctx.imageSmoothingEnabled = false;
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(img, 0, 0, width, height);
+            ctx.drawImage(img, 0, 0, displayWidth, displayHeight);
           }
         }
       };
@@ -147,10 +183,10 @@ export default function StencilPreview({
           <h3 className="font-sans text-lg font-semibold mb-3 text-gold-dark tracking-wide">
             IMAGEN ORIGINAL
           </h3>
-          <div className="border-2 border-dark-border overflow-auto bg-background max-h-[600px]">
+          <div className="border-2 border-dark-border overflow-hidden bg-background h-[600px] flex items-center justify-center">
             <canvas
               ref={originalCanvasRef}
-              className="w-auto h-auto"
+              className="max-w-full max-h-full object-contain"
               style={{ imageRendering: 'crisp-edges' }}
             />
           </div>
@@ -161,12 +197,11 @@ export default function StencilPreview({
           <h3 className="font-sans text-lg font-semibold mb-3 text-gold-dark tracking-wide">
             ESTÉNCIL PROCESADO (IA)
           </h3>
-          <div className="border-2 border-dark-border overflow-auto bg-background relative max-h-[600px]">
+          <div className="border-2 border-dark-border overflow-hidden bg-background relative h-[600px] flex items-center justify-center">
             {error && (
               <div className="absolute inset-0 flex items-center justify-center bg-background/95 backdrop-blur-sm z-10">
                 <div className="text-center p-4 max-w-md">
-                  <div className="text-red-400 text-4xl mb-3">⚠️</div>
-                  <p className="text-red-400 font-semibold mb-2 font-sans">Error de Procesamiento</p>
+                  <p className="text-red-400 font-semibold mb-2 font-sans text-lg">ERROR DE PROCESAMIENTO</p>
                   <p className="text-sm text-text-muted mb-4 font-sans">{error}</p>
                   <p className="text-xs text-text-muted font-sans">
                     Si el error persiste, intenta con una imagen más pequeña o en otro formato.
@@ -178,9 +213,8 @@ export default function StencilPreview({
             {!isProcessing && !stencilImage && canGenerate && (
               <div className="absolute inset-0 flex items-center justify-center bg-gradient-dark backdrop-blur-sm z-10">
                 <div className="text-center p-8">
-                  <div className="text-6xl mb-4">🎨</div>
                   <h3 className="font-serif text-2xl font-bold text-gold mb-2 tracking-wide">
-                    ¡IMAGEN LISTA!
+                    IMAGEN LISTA
                   </h3>
                   <p className="text-text-muted mb-6 max-w-sm font-sans">
                     Selecciona un estilo en el panel de configuración y presiona el botón para generar tu esténcil con IA
@@ -190,10 +224,7 @@ export default function StencilPreview({
                     disabled={!canGenerate}
                     className="px-8 py-4 bg-gradient-gold text-background font-sans font-bold tracking-wide shadow-lg hover:opacity-90 transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                   >
-                    <span className="flex items-center gap-2">
-                      <span>🌸</span>
-                      <span>GENERAR ESTÉNCIL CON IA</span>
-                    </span>
+                    GENERAR ESTÉNCIL CON IA
                   </button>
                   <p className="text-xs text-text-muted mt-4 font-sans">
                     Estilo seleccionado: <strong className="text-gold">{selectedStyle}</strong>
@@ -206,9 +237,6 @@ export default function StencilPreview({
                 <div className="text-center">
                   <div className="relative">
                     <div className="animate-spin rounded-full h-16 w-16 border-4 border-dark-border border-t-gold mx-auto mb-4"></div>
-                    <div className="absolute inset-0 flex items-center justify-center text-2xl">
-                      🤖
-                    </div>
                   </div>
                   <p className="text-gold font-semibold text-lg mb-1 font-sans tracking-wide">
                     GENERANDO CON IA...
@@ -221,7 +249,7 @@ export default function StencilPreview({
             )}
             <canvas
               ref={stencilCanvasRef}
-              className="w-auto h-auto"
+              className="max-w-full max-h-full object-contain"
               style={{ imageRendering: 'crisp-edges' }}
             />
           </div>
@@ -235,7 +263,7 @@ export default function StencilPreview({
             onClick={handleGenerateStencil}
             className="px-6 py-3 bg-gradient-gold text-background font-sans font-semibold tracking-wide hover:opacity-90 transform hover:scale-105 transition-all duration-300 shadow-lg"
           >
-            🔄 GENERAR CON OTRO ESTILO
+            GENERAR CON OTRO ESTILO
           </button>
         </div>
       )}

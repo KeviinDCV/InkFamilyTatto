@@ -4,12 +4,10 @@ import { useState } from "react";
 
 interface DownloadButtonProps {
   stencilImage: string;
-  lineColor: string;
 }
 
 export default function DownloadButton({
   stencilImage,
-  lineColor,
 }: DownloadButtonProps) {
   const [isDownloading, setIsDownloading] = useState(false);
 
@@ -76,7 +74,7 @@ export default function DownloadButton({
         }
       `}
     >
-      {isDownloading ? "⏳ DESCARGANDO..." : "⬇️ DESCARGAR ESTÉNCIL"}
+      {isDownloading ? "DESCARGANDO..." : "DESCARGAR ESTÉNCIL"}
     </button>
   );
 }
