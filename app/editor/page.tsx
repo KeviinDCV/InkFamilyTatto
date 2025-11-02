@@ -4,7 +4,6 @@ import { useState, useCallback } from "react";
 import ImageUploader from "@/components/ImageUploader";
 import StencilPreview from "@/components/StencilPreview";
 import StyleSelector from "@/components/StyleSelector";
-import SettingsPanel from "@/components/SettingsPanel";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -94,10 +93,6 @@ export default function EditorPage() {
                   <StyleSelector
                     selectedStyle={selectedStyle}
                     onStyleChange={setSelectedStyle}
-                  />
-
-                  <SettingsPanel
-                    stencilImage={stencilImage}
                   />
                 </div>
 

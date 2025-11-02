@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import DownloadButton from "./DownloadButton";
 
 interface StencilPreviewProps {
   originalImage: string;
@@ -248,7 +249,7 @@ export default function StencilPreview({
                     GENERANDO CON IA...
                   </p>
                   <p className="text-text-muted text-xs sm:text-sm font-sans">
-                    Calidad Ultra Alta (2048x2048) • ~15-30 segundos
+                    Calidad Ultra Alta • Manteniendo proporciones • ~15-30 segundos
                   </p>
                 </div>
               </div>
@@ -271,6 +272,13 @@ export default function StencilPreview({
           >
             GENERAR CON OTRO ESTILO
           </button>
+        </div>
+      )}
+
+      {/* Download Button - Colocado abajo para mejor accesibilidad */}
+      {stencilImage && (
+        <div className="mt-4 sm:mt-6">
+          <DownloadButton stencilImage={stencilImage} />
         </div>
       )}
     </div>

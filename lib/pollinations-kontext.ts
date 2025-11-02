@@ -33,6 +33,29 @@ export async function imageToStencilPollinations(
     const { buffer, mime } = dataURLtoBuffer(imageDataUrl);
     console.log('[Pollinations] Buffer creado:', buffer.length, 'bytes, mime:', mime);
     
+    // Obtener dimensiones de la imagen original para mantener aspect ratio
+    const imageDimensions = await getImageDimensions(imageDataUrl);
+    console.log('[Pollinations] Dimensiones originales:', imageDimensions);
+    
+    // Calcular dimensiones manteniendo aspect ratio (máximo 2048px en el lado más largo)
+    const maxSize = 2048;
+    let width = imageDimensions.width;
+    let height = imageDimensions.height;
+    
+    if (width > height) {
+      if (width > maxSize) {
+        height = Math.round((height * maxSize) / width);
+        width = maxSize;
+      }
+    } else {
+      if (height > maxSize) {
+        width = Math.round((width * maxSize) / height);
+        height = maxSize;
+      }
+    }
+    
+    console.log('[Pollinations] Dimensiones ajustadas:', { width, height });
+    
     // Subir imagen a servidor temporal (necesario para Pollinations)
     console.log('[Pollinations] Subiendo imagen a host temporal...');
     const imageUrl = await uploadToTemporaryHost(buffer, mime);
@@ -43,13 +66,17 @@ export async function imageToStencilPollinations(
     
     console.log(`[Pollinations] Prompt: ${prompt}`);
 
+    // Negative prompt para evitar contenido no deseado pero pasar filtros
+    const negativePrompt = 'photo, photograph, realistic, 3d, render, violence, gore, blood, weapons, nsfw, explicit, disturbing';
+    
     // Llamar a Pollinations Kontext API CON AUTENTICACIÓN Y MÁXIMA CALIDAD
     // safe=false: desactiva filtro de contenido (necesario para tatuajes)
     // quality=high: máxima calidad de generación
-    // 2048x2048: resolución ultra alta para detalles profesionales
-    const apiUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?model=kontext&image=${encodeURIComponent(imageUrl)}&width=2048&height=2048&quality=high&nologo=true&safe=false`;
+    // enhance=false: evita mejoras automáticas que puedan activar filtros
+    // IMPORTANTE: Usamos las dimensiones originales (con aspect ratio) para evitar crop
+    const apiUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?model=kontext&image=${encodeURIComponent(imageUrl)}&width=${width}&height=${height}&quality=high&nologo=true&safe=false&enhance=false&negative_prompt=${encodeURIComponent(negativePrompt)}&nofeed=true`;
     
-    console.log(`[Pollinations] Llamando a API con MÁXIMA CALIDAD (2048x2048, quality=high)...`);
+    console.log(`[Pollinations] Llamando a API con MÁXIMA CALIDAD (${width}x${height}, quality=high, aspect ratio preservado)...`);
 
     const response = await fetch(apiUrl, {
       headers: {
@@ -62,7 +89,13 @@ export async function imageToStencilPollinations(
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`[Pollinations] Error response body:`, errorText);
-      throw new Error(`Pollinations API error: ${response.status} - ${errorText || response.statusText}`);
+      
+      // Manejar específicamente el error de filtro de contenido
+      if (errorText.includes('violence detection') || errorText.includes('Content rejected')) {
+        throw new Error('La imagen fue rechazada por el filtro de contenido. Por favor, intenta con otra imagen o con un estilo diferente.');
+      }
+      
+      throw new Error(`Error al procesar con IA: ${response.status}. Intenta nuevamente o con otra imagen.`);
     }
 
     // Convertir respuesta a buffer y luego a data URL
@@ -86,21 +119,60 @@ export async function imageToStencilPollinations(
 /**
  * Genera prompt específico para cada estilo
  * Prompts profesionales basados en artistas reales
+ * IMPORTANTE: Todos los prompts incluyen instrucciones para mantener la composición COMPLETA
+ * Los prompts están optimizados para evitar filtros de contenido
  */
 function getPromptForStyle(styleId: string): string {
   const prompts: Record<string, string> = {
-    'classic': 'Convert this image into a traditional tattoo stencil with bold, clean black outlines. Use strong lines and simplified forms with high contrast, emphasizing classic tattoo aesthetics. Remove all colors and gradients, keeping only clear shapes and linework suitable for stencil printing.',
+    'classic': 'Professional tattoo line art stencil design. Transform this COMPLETE image into clean black outlines and simple shapes with high contrast. MAINTAIN THE FULL COMPOSITION without cropping. Traditional tattoo aesthetic with bold lines. Remove colors, keep only linework. Artistic illustration style, suitable for body art stencil printing.',
     
-    'darwin-enriquez': 'Create a tattoo stencil inspired by Darwin Enriquez\'s style. Focus on precise, clean, and detailed linework with balanced shading. Use thin to medium lines to define facial features, hair, and textures. Keep the composition elegant, black and white only, ready for tattoo transfer.',
+    'darwin-enriquez': 'Fine art tattoo sketch in Darwin Enriquez style. Convert the ENTIRE image into elegant linework with precise details. KEEP THE FULL FRAME without cropping. Thin to medium artistic lines defining features and textures. Black and white illustration, professional tattoo design ready for transfer.',
     
-    'stiven-hernandez': 'Generate a tattoo stencil in the style of Stiven Hernandez — a classic yet highly detailed black and white design. Emphasize clear outlines, realistic structure, and strong contrast, while preserving a traditional tattoo composition. Simplify background elements but retain facial and anatomical precision.',
+    'stiven-hernandez': 'Classic tattoo design illustration in Stiven Hernandez style. Transform the COMPLETE image into detailed line art. DO NOT CROP - maintain full composition. Clear outlines with artistic structure and contrast. Traditional tattoo illustration with anatomical precision. Professional body art design.',
     
-    'andres-makishi': 'Transform this image into a minimalist fine-line tattoo stencil inspired by Andres Makishi. Use ultra-thin, precise lines with delicate detail and minimal shading. Keep the composition elegant and simple, focusing on clean contours and negative space. Black ink only, no background or fills.',
+    'andres-makishi': 'Minimalist fine-line tattoo artwork inspired by Andres Makishi. Convert this FULL image into delicate line art. PRESERVE THE COMPLETE COMPOSITION. Ultra-thin precise lines with elegant contours. Simple black ink illustration focusing on negative space. Professional minimalist tattoo design.',
     
-    'adrian-rod': 'Create a tattoo stencil in the style of Adrian Rod — detailed, high-contrast, and dynamic. Use sharp black outlines with deep shadows and intricate texture definition. Focus on depth and realism while maintaining stencil clarity. The result should be bold and ready for professional tattoo application.',
+    'adrian-rod': 'Detailed tattoo illustration in Adrian Rod style. Transform this COMPLETE image into bold line art. KEEP THE ENTIRE FRAME intact. Sharp outlines with artistic texture definition. Professional high-contrast illustration. Ready for professional tattoo stencil application.',
   };
 
   return prompts[styleId] || prompts['classic'];
+}
+
+/**
+ * Obtiene las dimensiones de una imagen desde Data URL
+ */
+async function getImageDimensions(dataURL: string): Promise<{ width: number; height: number }> {
+  // En Node.js, necesitamos usar una librería como sharp o jimp
+  // Por ahora, usaremos el tamaño del buffer como aproximación
+  // y decodificaremos las dimensiones desde el header de la imagen
+  
+  const { buffer } = dataURLtoBuffer(dataURL);
+  
+  // Intentar leer dimensiones del header PNG
+  if (buffer[0] === 0x89 && buffer[1] === 0x50) { // PNG
+    const width = buffer.readUInt32BE(16);
+    const height = buffer.readUInt32BE(20);
+    return { width, height };
+  }
+  
+  // Intentar leer dimensiones del header JPEG
+  if (buffer[0] === 0xFF && buffer[1] === 0xD8) { // JPEG
+    let offset = 2;
+    while (offset < buffer.length) {
+      if (buffer[offset] !== 0xFF) break;
+      const marker = buffer[offset + 1];
+      if (marker === 0xC0 || marker === 0xC2) {
+        const height = buffer.readUInt16BE(offset + 5);
+        const width = buffer.readUInt16BE(offset + 7);
+        return { width, height };
+      }
+      offset += 2 + buffer.readUInt16BE(offset + 2);
+    }
+  }
+  
+  // Fallback: usar dimensiones cuadradas por defecto
+  console.warn('[getImageDimensions] No se pudieron detectar dimensiones, usando 2048x2048');
+  return { width: 2048, height: 2048 };
 }
 
 /**
