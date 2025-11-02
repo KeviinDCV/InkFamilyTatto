@@ -67,13 +67,13 @@ export default function ImageUploader({ onImageUpload, onError }: ImageUploaderP
       <div
         {...getRootProps()}
         className={`
-          border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-all
+          border-2 border-dashed p-12 text-center cursor-pointer transition-all duration-300
           ${
             isDragActive || isDragging
-              ? "border-accent-cool-purple bg-accent-cool-purple/10"
+              ? "border-gold bg-gold/10 shadow-lg shadow-gold/20"
               : error
-              ? "border-red-400 bg-red-50"
-              : "border-gray-300 hover:border-accent-cool-purple hover:bg-gray-50"
+              ? "border-red-500/50 bg-red-900/20"
+              : "border-dark-border bg-dark-card hover:border-gold hover:bg-gold/5"
           }
         `}
         onMouseEnter={() => setIsDragging(true)}
@@ -81,39 +81,44 @@ export default function ImageUploader({ onImageUpload, onError }: ImageUploaderP
       >
         <input {...getInputProps()} />
         <div className="flex flex-col items-center">
-          <svg
-            className="w-16 h-16 text-gray-400 mb-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-            />
-          </svg>
-          <p className="text-lg font-semibold text-gray-700 mb-2">
+          <div className="relative mb-6">
+            {/* Efecto de glow detrás del ícono */}
+            <div className="absolute inset-0 bg-gold/20 rounded-full blur-2xl"></div>
+            <svg
+              className="w-20 h-20 text-gold relative z-10"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+              />
+            </svg>
+          </div>
+          <p className="font-serif text-2xl font-bold text-gold mb-3 tracking-wide">
             {isDragActive
-              ? "Suelta la imagen aquí"
-              : "Arrastra y suelta tu imagen aquí"}
+              ? "SUELTA LA IMAGEN AQUÍ"
+              : "ARRASTRA Y SUELTA TU IMAGEN"}
           </p>
-          <p className="text-sm text-gray-500 mb-4">o</p>
+          <div className="w-16 h-px bg-gradient-gold my-4"></div>
+          <p className="text-sm text-text-muted mb-6 font-sans">o haz click para seleccionar</p>
           <button 
             type="button"
-            className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-gray-800 transition-colors font-semibold"
+            className="px-8 py-3 bg-gradient-gold text-background font-sans font-bold tracking-wide hover:opacity-90 transition-all duration-300 transform hover:scale-105"
           >
-            Seleccionar archivo
+            SELECCIONAR ARCHIVO
           </button>
-          <p className="text-xs text-gray-400 mt-4">
-            Formatos soportados: JPG, PNG, WebP (máx. 10MB)
+          <p className="text-xs text-text-muted mt-6 font-sans">
+            Formatos soportados: JPG, PNG, WebP · Máximo 10MB
           </p>
         </div>
       </div>
       {error && (
-        <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-sm text-red-600">{error}</p>
+        <div className="mt-6 p-4 bg-red-900/20 border border-red-500/50 backdrop-blur-sm">
+          <p className="text-sm text-red-400 font-sans">{error}</p>
         </div>
       )}
     </div>

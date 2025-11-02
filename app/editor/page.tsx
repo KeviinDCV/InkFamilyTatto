@@ -54,15 +54,21 @@ export default function EditorPage() {
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-12">
+      <div className="container mx-auto px-4 py-12 relative">
+        {/* Efectos de fondo similares al landing page */}
+        <div className="absolute inset-0 opacity-5 pointer-events-none">
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gold rounded-full blur-3xl"></div>
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-bronze rounded-full blur-3xl"></div>
+        </div>
+
         {!image ? (
-          <div className="max-w-3xl mx-auto">
+          <div className="max-w-3xl mx-auto relative z-10">
             <div className="text-center mb-12">
               <h1 className="font-serif text-5xl md:text-6xl font-bold mb-4 text-gold tracking-wide">
                 GENERADOR DE ESTÉNCILES
               </h1>
               <div className="w-24 h-px bg-gradient-gold mx-auto mb-6"></div>
-              <p className="text-lg text-text-muted">
+              <p className="text-lg text-text-muted font-sans">
                 Sube tu imagen para comenzar a crear tu esténcil profesional de tatuaje
               </p>
             </div>
@@ -75,7 +81,7 @@ export default function EditorPage() {
             />
           </div>
         ) : (
-          <div className="grid lg:grid-cols-3 gap-8">
+          <div className="grid lg:grid-cols-3 gap-8 relative z-10">
             {/* Preview Section */}
             <div className="lg:col-span-2">
               <StencilPreview
@@ -121,9 +127,9 @@ export default function EditorPage() {
                     setImage(null);
                     setStencilImage(null);
                   }}
-                  className="w-full px-4 py-3 bg-gradient-gold text-background hover:opacity-90 transition-opacity font-sans font-semibold tracking-wide"
+                  className="w-full px-4 py-3 bg-gradient-gold text-background hover:opacity-90 transition-all duration-300 transform hover:scale-105 font-sans font-bold tracking-wide"
                 >
-                  SUBIR NUEVA IMAGEN
+                  🔄 SUBIR NUEVA IMAGEN
                 </button>
               </div>
             </div>

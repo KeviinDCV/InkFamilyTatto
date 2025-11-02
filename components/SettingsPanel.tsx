@@ -30,34 +30,34 @@ export default function SettingsPanel({
             type="checkbox"
             checked={pngOutline}
             onChange={(e) => onPngOutlineChange(e.target.checked)}
-            className="w-5 h-5 text-primary border-gray-300 rounded focus:ring-primary"
+            className="w-5 h-5 text-gold border-dark-border rounded focus:ring-gold accent-gold"
           />
-          <span className="text-sm font-medium text-gray-700">
+          <span className="text-sm font-medium text-text-primary font-sans">
             PNG Outline (Sin fondo)
           </span>
         </label>
-        <p className="text-xs text-gray-500 mt-1 ml-8">
+        <p className="text-xs text-text-muted mt-1 ml-8 font-sans">
           Solo líneas para fácil transferencia
         </p>
       </div>
 
       {/* Line Color Selector */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Color de Línea
+        <label className="block text-sm font-medium text-gold-dark mb-2 font-sans tracking-wide">
+          COLOR DE LÍNEA
         </label>
         <div className="flex items-center space-x-3">
           <input
             type="color"
             value={lineColor}
             onChange={(e) => onLineColorChange(e.target.value)}
-            className="w-16 h-10 rounded border border-gray-300 cursor-pointer"
+            className="w-16 h-10 border border-dark-border cursor-pointer bg-background"
           />
           <input
             type="text"
             value={lineColor}
             onChange={(e) => onLineColorChange(e.target.value)}
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+            className="flex-1 px-3 py-2 border border-dark-border bg-background text-text-primary focus:outline-none focus:ring-2 focus:ring-gold focus:border-gold font-sans"
             placeholder="#000000"
           />
         </div>
@@ -65,8 +65,8 @@ export default function SettingsPanel({
 
       {/* Threshold Slider */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Cantidad de Detalle: {threshold}
+        <label className="block text-sm font-medium text-gold-dark mb-2 font-sans tracking-wide">
+          CANTIDAD DE DETALLE: {threshold}
         </label>
         <input
           type="range"
@@ -75,13 +75,13 @@ export default function SettingsPanel({
           step="20"
           value={threshold}
           onChange={(e) => onThresholdChange(Number(e.target.value))}
-          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary"
+          className="w-full h-2 bg-dark-border rounded-lg appearance-none cursor-pointer accent-gold"
         />
-        <div className="flex justify-between text-xs text-gray-500 mt-1">
+        <div className="flex justify-between text-xs text-text-muted mt-1 font-sans">
           <span>✨ SIMPLE (pocas líneas)</span>
           <span>🔍 DETALLADO (muchas líneas)</span>
         </div>
-        <p className="text-xs text-gray-500 mt-2 font-semibold text-red-600">
+        <p className="text-xs text-gold-dark mt-2 font-semibold font-sans">
           ⬅️ IZQUIERDA = Minimalista | DERECHA = Máximo detalle ➡️
         </p>
       </div>

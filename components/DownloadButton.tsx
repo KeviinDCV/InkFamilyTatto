@@ -68,15 +68,15 @@ export default function DownloadButton({
       onClick={handleDownload}
       disabled={isDownloading}
       className={`
-        w-full px-6 py-3 rounded-lg font-semibold text-white transition-all
+        w-full px-6 py-3 font-sans font-bold tracking-wide transition-all duration-300
         ${
           isDownloading
-            ? "bg-gray-400 cursor-not-allowed"
-            : "bg-gradient-warm hover:opacity-90 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+            ? "bg-dark-border text-text-muted cursor-not-allowed"
+            : "bg-gradient-gold text-background hover:opacity-90 shadow-lg shadow-gold/20 transform hover:scale-105"
         }
       `}
     >
-      {isDownloading ? "Descargando..." : "Descargar Esténcil"}
+      {isDownloading ? "⏳ DESCARGANDO..." : "⬇️ DESCARGAR ESTÉNCIL"}
     </button>
   );
 }
