@@ -29,8 +29,8 @@ const config: Config = {
         "text-dark": "#666666",    // Gris oscuro
       },
       fontFamily: {
-        serif: ['Cinzel', 'serif'],
-        sans: ['Inter', 'sans-serif'],
+        serif: ['var(--font-cinzel)', 'serif'],
+        sans: ['var(--font-inter)', 'sans-serif'],
       },
       backgroundImage: {
         "gradient-gold": "linear-gradient(135deg, #C9B896 0%, #B8A886 100%)",
