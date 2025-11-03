@@ -24,6 +24,7 @@ export default function StencilPreview({
 }: StencilPreviewProps) {
   const originalCanvasRef = useRef<HTMLCanvasElement>(null);
   const stencilCanvasRef = useRef<HTMLCanvasElement>(null);
+  const overlayCanvasRef = useRef<HTMLCanvasElement>(null);
   const [error, setError] = useState<string>("");
   const [canGenerate, setCanGenerate] = useState<boolean>(false);
   const [viewMode, setViewMode] = useState<ViewMode>('slider');
@@ -130,6 +131,31 @@ export default function StencilPreview({
     }
   };
 
+  // Draw overlay canvas (original image) for slider comparison
+  useEffect(() => {
+    if (!stencilImage || !originalImage || !overlayCanvasRef.current || !stencilCanvasRef.current) return;
+
+    const overlayCanvas = overlayCanvasRef.current;
+    const stencilCanvas = stencilCanvasRef.current;
+    
+    const img = new Image();
+    img.onload = () => {
+      // Sincronizar dimensiones exactas con el canvas del stencil
+      overlayCanvas.width = stencilCanvas.width;
+      overlayCanvas.height = stencilCanvas.height;
+      
+      const ctx = overlayCanvas.getContext('2d');
+      if (ctx) {
+        ctx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+        ctx.globalAlpha = originalOpacity / 100;
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, 0, 0, overlayCanvas.width, overlayCanvas.height);
+      }
+    };
+    img.src = originalImage;
+  }, [stencilImage, originalImage, originalOpacity, stencilCanvasRef.current?.width, stencilCanvasRef.current?.height]);
+
   // Draw stencil image
   useEffect(() => {
     if (stencilImage && stencilCanvasRef.current) {
@@ -226,15 +252,17 @@ export default function StencilPreview({
           <h3 className="font-sans text-base sm:text-lg font-semibold mb-2 sm:mb-3 text-gold-dark tracking-wide">
             ESTÉNCIL PROCESADO (IA)
           </h3>
-          <div className="border-2 border-dark-border overflow-hidden bg-zinc-900 relative flex items-center justify-center">
+          <div className="border-2 border-dark-border overflow-hidden bg-zinc-900 relative">
             {/* Modo Slider - Imagen original con clip-path dinámico */}
             {stencilImage && (
-              <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none" style={{ clipPath: `inset(0 ${100 - sliderPosition}% 0 0)` }}>
-                <img
-                  src={originalImage}
-                  alt="Original overlay"
+              <div 
+                className="absolute top-0 left-0 w-full h-full z-10 pointer-events-none" 
+                style={{ clipPath: `inset(0 ${100 - sliderPosition}% 0 0)` }}
+              >
+                <canvas
+                  ref={overlayCanvasRef}
                   className="w-full h-auto"
-                  style={{opacity: originalOpacity / 100, display: 'block'}}
+                  style={{ imageRendering: 'crisp-edges', display: 'block' }}
                 />
               </div>
             )}

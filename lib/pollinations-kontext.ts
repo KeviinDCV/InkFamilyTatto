@@ -106,11 +106,14 @@ export async function imageToStencilPollinations(
     
     console.log('[Pollinations] Esténcil generado, tamaño original:', resultBuffer.length, 'bytes');
 
-    // UPSCALING + MEJORA DE NITIDEZ EXTREMA (LÍNEAS SÚPER DEFINIDAS)
+    // UPSCALING + MEJORA DE NITIDEZ (AJUSTADO SEGÚN ESTILO)
     console.log('[Sharp] Aplicando procesamiento de imagen profesional...');
     
     try {
-      const upscaledBuffer = await sharp(resultBuffer)
+      // Procesamiento diferenciado según el estilo
+      const isFineLine = styleId === 'andres-makishi';
+      
+      let sharpProcessor = sharp(resultBuffer)
         // 1. Upscaling con Lanczos3
         .resize({
           width: width * 2,  // 2x upscale
@@ -119,33 +122,58 @@ export async function imageToStencilPollinations(
           fit: 'fill'
         })
         // 2. Convertir a escala de grises para mejorar contraste
-        .grayscale()
-        // 3. Normalizar para maximizar contraste (blanco y negro puros)
-        .normalise()
-        // 4. Aumentar contraste agresivamente
-        .linear(1.5, -(128 * 0.5)) // Aumenta contraste
-        // 5. Sharpening EXTREMO para líneas nítidas tipo SVG
-        .sharpen({
-          sigma: 2,      // Más agresivo
-          m1: 2,         // Ganancia de nitidez
-          m2: 3,         // Ganancia de bordes
-          x1: 3,         // Umbral bajo
-          y2: 15,        // Umbral alto
-          y3: 15
-        })
-        // 6. Unsharp mask adicional para bordes perfectos
-        .convolve({
-          width: 3,
-          height: 3,
-          kernel: [
-            -1, -1, -1,
-            -1,  9, -1,
-            -1, -1, -1
-          ]
-        })
-        // 7. Threshold para convertir a blanco/negro puro (líneas perfectas)
-        .threshold(128, { grayscale: false })
-        // 8. PNG sin pérdida
+        .grayscale();
+      
+      if (isFineLine) {
+        // Procesamiento suave para líneas finas (Andres Makishi)
+        sharpProcessor = sharpProcessor
+          // Normalización suave
+          .normalise()
+          // Contraste moderado para preservar líneas finas
+          .linear(1.3, -(128 * 0.3))
+          // Sharpening suave para definir sin eliminar líneas finas
+          .sharpen({
+            sigma: 1.5,
+            m1: 1.5,
+            m2: 2,
+            x1: 2,
+            y2: 10,
+            y3: 10
+          })
+          // Threshold más bajo para preservar líneas finas
+          .threshold(110, { grayscale: false });
+      } else {
+        // Procesamiento agresivo para líneas bold (otros estilos)
+        sharpProcessor = sharpProcessor
+          // Normalizar para maximizar contraste
+          .normalise()
+          // Aumentar contraste agresivamente
+          .linear(1.5, -(128 * 0.5))
+          // Sharpening EXTREMO para líneas nítidas tipo SVG
+          .sharpen({
+            sigma: 2,
+            m1: 2,
+            m2: 3,
+            x1: 3,
+            y2: 15,
+            y3: 15
+          })
+          // Unsharp mask adicional para bordes perfectos
+          .convolve({
+            width: 3,
+            height: 3,
+            kernel: [
+              -1, -1, -1,
+              -1,  9, -1,
+              -1, -1, -1
+            ]
+          })
+          // Threshold estándar para líneas bold
+          .threshold(128, { grayscale: false });
+      }
+      
+      const upscaledBuffer = await sharpProcessor
+        // PNG sin pérdida
         .png({ quality: 100, compressionLevel: 6 })
         .toBuffer();
       
@@ -179,15 +207,15 @@ export async function imageToStencilPollinations(
  */
 function getPromptForStyle(styleId: string): string {
   const prompts: Record<string, string> = {
-    'classic': 'Professional tattoo line art stencil design. Transform this COMPLETE image into clean black outlines and simple shapes with high contrast. MAINTAIN THE FULL COMPOSITION without cropping. Traditional tattoo aesthetic with bold lines. Remove colors, keep only linework. Artistic illustration style, suitable for body art stencil printing.',
+    'classic': 'Transform this COMPLETE image into a traditional tattoo stencil design. MAINTAIN THE FULL COMPOSITION without cropping. Use bold lines, thick outlines, no shading, blackwork style. Clean contours with strong contrast. Professional tattoo stencil ready for application.',
     
-    'darwin-enriquez': 'Convert to detailed vector-style line art stencil with RICH INTERNAL DETAILS. MAINTAIN COMPLETE COMPOSITION - DO NOT CROP. Use clean continuous black lines throughout - medium consistent weight. Include: (1) ALL outer contours and edges, (2) MANY internal detail lines showing wrinkles, folds, textures, patterns, facial features, clothing details, (3) Edge lines defining every visible element and surface change. Add abundant line details for depth and realism - MORE LINES not fewer. Think detailed comic book ink art or technical illustration - every fold, seam, texture, and feature defined by individual line strokes. NO fills, NO solid blacks, NO shading masses - ONLY line strokes but use MANY of them to capture all details. Result: highly detailed line drawing stencil with comprehensive linework throughout. White background, abundant black line details.',
+    'darwin-enriquez': 'Convert this FULL image into a detailed tattoo stencil. MAINTAIN COMPLETE COMPOSITION - DO NOT CROP. Use clean lines, detailed linework, blackwork style, high-contrast, very sharp and crisp edges. Professional stencil with clear definition throughout.',
     
-    'stiven-hernandez': 'Classic tattoo design illustration in Stiven Hernandez style. Transform the COMPLETE image into detailed line art. DO NOT CROP - maintain full composition. Clear outlines with artistic structure and contrast. Traditional tattoo illustration with anatomical precision. Professional body art design.',
+    'stiven-hernandez': 'Transform this COMPLETE image into a tattoo stencil with clean lines and classic detail. DO NOT CROP - maintain full composition. Use fine and consistent outlines, high contrast, traditional tattoo aesthetic. Professional stencil design.',
     
-    'andres-makishi': 'Minimalist fine-line tattoo artwork inspired by Andres Makishi. Convert this FULL image into delicate line art. PRESERVE THE COMPLETE COMPOSITION. Ultra-thin precise lines with elegant contours. Simple black ink illustration focusing on negative space. Professional minimalist tattoo design.',
+    'andres-makishi': 'Convert this FULL image into a fine-line tattoo stencil with VISIBLE delicate lines. PRESERVE THE COMPLETE COMPOSITION and ALL DETAILS from the original image. Use thin but CLEAR and DEFINED black lines to capture: (1) all outer contours, (2) all internal details including wrinkles, folds, textures, facial features, clothing details, accessories, (3) all surface changes and defining elements. Maintain EVERY detail but with fine-line style. Lines must be thin, consistent, visible and crisp throughout. Balance between delicate fine-line aesthetic and complete detail preservation. Professional fine-line stencil with good contrast and comprehensive linework.',
     
-    'adrian-rod': 'Detailed tattoo illustration in Adrian Rod style. Transform this COMPLETE image into bold line art. KEEP THE ENTIRE FRAME intact. Sharp outlines with artistic texture definition. Professional high-contrast illustration. Ready for professional tattoo stencil application.',
+    'adrian-rod': 'Transform this COMPLETE image into a detailed tattoo stencil. KEEP THE ENTIRE FRAME intact. Use detailed linework, high-contrast, blackwork with detailed shading but only using lines. Rich detail throughout with line-based shading technique. Professional high-detail stencil.',
   };
 
   return prompts[styleId] || prompts['classic'];
