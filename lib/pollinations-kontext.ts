@@ -1,7 +1,9 @@
 /**
- * Pollinations Kontext - Image-to-Image GRATIS
+ * Pollinations Kontext - Image-to-Image GRATIS + Sharp Upscaling
  * Documentación: https://github.com/pollinations/pollinations
  */
+
+import sharp from 'sharp';
 
 export interface PollinationsKontextOptions {
   imageDataUrl: string;
@@ -98,13 +100,66 @@ export async function imageToStencilPollinations(
       throw new Error(`Error al procesar con IA: ${response.status}. Intenta nuevamente o con otra imagen.`);
     }
 
-    // Convertir respuesta a buffer y luego a data URL
+    // Convertir respuesta a buffer
     const arrayBuffer = await response.arrayBuffer();
-    const resultBuffer = Buffer.from(arrayBuffer);
-    const resultMime = response.headers.get('content-type') || 'image/png';
+    let resultBuffer = Buffer.from(arrayBuffer);
+    
+    console.log('[Pollinations] Esténcil generado, tamaño original:', resultBuffer.length, 'bytes');
+
+    // UPSCALING + MEJORA DE NITIDEZ EXTREMA (LÍNEAS SÚPER DEFINIDAS)
+    console.log('[Sharp] Aplicando procesamiento de imagen profesional...');
+    
+    try {
+      const upscaledBuffer = await sharp(resultBuffer)
+        // 1. Upscaling con Lanczos3
+        .resize({
+          width: width * 2,  // 2x upscale
+          height: height * 2,
+          kernel: 'lanczos3', // Máxima calidad de interpolación
+          fit: 'fill'
+        })
+        // 2. Convertir a escala de grises para mejorar contraste
+        .grayscale()
+        // 3. Normalizar para maximizar contraste (blanco y negro puros)
+        .normalise()
+        // 4. Aumentar contraste agresivamente
+        .linear(1.5, -(128 * 0.5)) // Aumenta contraste
+        // 5. Sharpening EXTREMO para líneas nítidas tipo SVG
+        .sharpen({
+          sigma: 2,      // Más agresivo
+          m1: 2,         // Ganancia de nitidez
+          m2: 3,         // Ganancia de bordes
+          x1: 3,         // Umbral bajo
+          y2: 15,        // Umbral alto
+          y3: 15
+        })
+        // 6. Unsharp mask adicional para bordes perfectos
+        .convolve({
+          width: 3,
+          height: 3,
+          kernel: [
+            -1, -1, -1,
+            -1,  9, -1,
+            -1, -1, -1
+          ]
+        })
+        // 7. Threshold para convertir a blanco/negro puro (líneas perfectas)
+        .threshold(128, { grayscale: false })
+        // 8. PNG sin pérdida
+        .png({ quality: 100, compressionLevel: 6 })
+        .toBuffer();
+      
+      resultBuffer = Buffer.from(upscaledBuffer);
+      console.log('[Sharp] Procesamiento completado: líneas nítidas tipo SVG, tamaño:', resultBuffer.length, 'bytes');
+    } catch (upscaleError) {
+      console.warn('[Sharp] Error en procesamiento, usando imagen original:', upscaleError);
+      // Si falla el upscaling, continuar con la imagen original
+    }
+
+    const resultMime = 'image/png';
     const resultDataUrl = bufferToDataURL(resultBuffer, resultMime);
 
-    console.log('[Pollinations] Esténcil generado exitosamente, tamaño:', resultBuffer.length, 'bytes');
+    console.log('[Pollinations] ✅ Esténcil finalizado: 2x resolución + líneas súper nítidas tipo SVG');
 
     return resultDataUrl;
   } catch (error) {
@@ -126,7 +181,7 @@ function getPromptForStyle(styleId: string): string {
   const prompts: Record<string, string> = {
     'classic': 'Professional tattoo line art stencil design. Transform this COMPLETE image into clean black outlines and simple shapes with high contrast. MAINTAIN THE FULL COMPOSITION without cropping. Traditional tattoo aesthetic with bold lines. Remove colors, keep only linework. Artistic illustration style, suitable for body art stencil printing.',
     
-    'darwin-enriquez': 'Fine art tattoo sketch in Darwin Enriquez style. Convert the ENTIRE image into elegant linework with precise details. KEEP THE FULL FRAME without cropping. Thin to medium artistic lines defining features and textures. Black and white illustration, professional tattoo design ready for transfer.',
+    'darwin-enriquez': 'Create a highly detailed line art tattoo stencil in Darwin Enriquez style - known for intricate patterns and realistic portraits with complex designs. MAINTAIN THE COMPLETE COMPOSITION - DO NOT CROP, DO NOT ZOOM, keep the ENTIRE image frame intact exactly as provided. Use DETAILED CONSISTENT LINEWORK throughout with medium line weight. Capture ALL details through LINE TECHNIQUE ONLY: facial features, textures, depth, patterns - everything expressed via lines. Apply intricate geometric patterns and decorative details using fine line work. For depth/shading use CLOSELY SPACED PARALLEL LINES (not solid fills). CRITICAL RULES: (1) PRESERVE FULL IMAGE - no cropping or composition changes, (2) NO solid black fills anywhere - use dense parallel lines instead for dark areas, (3) NO thick shadow masses - use line density to show darkness, (4) Maintain CONSISTENT line thickness - medium weight throughout, (5) Complex details via intricate line patterns not fills, (6) Think technical pen illustration - every shadow/texture/depth created by LINE SPACING and DIRECTION, never by solid fills. Result: professional complex stencil with the COMPLETE original composition and intricate realistic details expressed through detailed linework patterns.',
     
     'stiven-hernandez': 'Classic tattoo design illustration in Stiven Hernandez style. Transform the COMPLETE image into detailed line art. DO NOT CROP - maintain full composition. Clear outlines with artistic structure and contrast. Traditional tattoo illustration with anatomical precision. Professional body art design.',
     

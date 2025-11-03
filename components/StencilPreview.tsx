@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import DownloadButton from "./DownloadButton";
 
+type ViewMode = 'preview' | 'side-by-side' | 'slider';
+
 interface StencilPreviewProps {
   originalImage: string;
   stencilImage: string | null;
@@ -22,8 +24,11 @@ export default function StencilPreview({
 }: StencilPreviewProps) {
   const originalCanvasRef = useRef<HTMLCanvasElement>(null);
   const stencilCanvasRef = useRef<HTMLCanvasElement>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string>("");
   const [canGenerate, setCanGenerate] = useState<boolean>(false);
+  const [viewMode, setViewMode] = useState<ViewMode>('preview');
+  const [originalOpacity, setOriginalOpacity] = useState<number>(100);
+  const [sliderPosition, setSliderPosition] = useState<number>(50);
 
   // Draw original image
   useEffect(() => {
@@ -87,7 +92,7 @@ export default function StencilPreview({
     if (!originalImage || !selectedStyle) return;
 
     onProcessingStart();
-    setError(null);
+    setError("");
 
     try {
       console.log(`[StencilPreview] Generando esténcil con IA: Estilo=${selectedStyle}`);
@@ -184,6 +189,63 @@ export default function StencilPreview({
         <h2 className="font-serif text-2xl sm:text-3xl font-bold text-gold tracking-wide">VISTA PREVIA</h2>
       </div>
 
+      {/* Controles de visualización */}
+      {stencilImage && (
+        <div className="mb-4 sm:mb-6 space-y-4">
+          {/* Selector de modo de vista */}
+          <div>
+            <label className="block text-sm font-semibold text-gold-dark mb-2">Modo de Vista</label>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setViewMode('preview')}
+                className={`px-4 py-2 text-sm font-sans transition-all ${
+                  viewMode === 'preview'
+                    ? 'bg-gradient-gold text-background'
+                    : 'bg-background text-gold-dark border border-dark-border hover:border-gold'
+                }`}
+              >
+                Preview
+              </button>
+              <button
+                onClick={() => setViewMode('side-by-side')}
+                className={`px-4 py-2 text-sm font-sans transition-all ${
+                  viewMode === 'side-by-side'
+                    ? 'bg-gradient-gold text-background'
+                    : 'bg-background text-gold-dark border border-dark-border hover:border-gold'
+                }`}
+              >
+                Side by Side
+              </button>
+              <button
+                onClick={() => setViewMode('slider')}
+                className={`px-4 py-2 text-sm font-sans transition-all ${
+                  viewMode === 'slider'
+                    ? 'bg-gradient-gold text-background'
+                    : 'bg-background text-gold-dark border border-dark-border hover:border-gold'
+                }`}
+              >
+                Slider
+              </button>
+            </div>
+          </div>
+
+          {/* Control de opacidad */}
+          <div>
+            <label className="block text-sm font-semibold text-gold-dark mb-2">
+              Opacidad Original: {originalOpacity}%
+            </label>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={originalOpacity}
+              onChange={(e) => setOriginalOpacity(Number(e.target.value))}
+              className="w-full h-2 bg-dark-border rounded-lg appearance-none cursor-pointer accent-gold"
+            />
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
         {/* Original Image */}
         <div>
@@ -205,6 +267,28 @@ export default function StencilPreview({
             ESTÉNCIL PROCESADO (IA)
           </h3>
           <div className="border-2 border-dark-border overflow-hidden bg-background relative h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px] flex items-center justify-center">
+            {/* Modo Slider - Imagen original con clip-path dinámico */}
+            {stencilImage && viewMode === 'slider' && (
+              <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none" style={{ clipPath: `inset(0 ${100 - sliderPosition}% 0 0)` }}>
+                <img
+                  src={originalImage}
+                  alt="Original overlay"
+                  className="max-w-full max-h-full object-contain"
+                  style={{opacity: originalOpacity / 100}}
+                />
+              </div>
+            )}
+            
+            {/* Modo Side by Side - Imagen original superpuesta con opacidad */}
+            {stencilImage && viewMode === 'side-by-side' && (
+              <img
+                src={originalImage}
+                alt="Original overlay"
+                className="max-w-full max-h-full object-contain absolute z-10 pointer-events-none"
+                style={{opacity: originalOpacity / 100}}
+              />
+            )}
+            
             {error && (
               <div className="absolute inset-0 flex items-center justify-center bg-background/95 backdrop-blur-sm z-10">
                 <div className="text-center p-3 sm:p-4 max-w-md mx-4">
@@ -249,16 +333,49 @@ export default function StencilPreview({
                     GENERANDO CON IA...
                   </p>
                   <p className="text-text-muted text-xs sm:text-sm font-sans">
-                    Calidad Ultra Alta • Manteniendo proporciones • ~15-30 segundos
+                    IA + Mejora de Nitidez Extrema (Líneas Vectoriales) • ~20-40s
                   </p>
                 </div>
               </div>
             )}
             <canvas
               ref={stencilCanvasRef}
-              className="max-w-full max-h-full object-contain"
+              className="max-w-full max-h-full object-contain relative z-0"
               style={{ imageRendering: 'crisp-edges' }}
             />
+            
+            {/* Control deslizante para modo Slider */}
+            {stencilImage && viewMode === 'slider' && (
+              <div 
+                className="absolute inset-y-0 w-1 bg-gold cursor-ew-resize z-20 flex items-center justify-center"
+                style={{ left: `${sliderPosition}%` }}
+                onMouseDown={(e) => {
+                  const container = e.currentTarget.parentElement;
+                  if (!container) return;
+                  
+                  const handleMouseMove = (moveEvent: MouseEvent) => {
+                    const rect = container.getBoundingClientRect();
+                    const x = moveEvent.clientX - rect.left;
+                    const percentage = Math.max(0, Math.min(100, (x / rect.width) * 100));
+                    setSliderPosition(percentage);
+                  };
+                  
+                  const handleMouseUp = () => {
+                    document.removeEventListener('mousemove', handleMouseMove);
+                    document.removeEventListener('mouseup', handleMouseUp);
+                  };
+                  
+                  document.addEventListener('mousemove', handleMouseMove);
+                  document.addEventListener('mouseup', handleMouseUp);
+                }}
+              >
+                <div className="w-8 h-8 bg-gold rounded-full flex items-center justify-center shadow-lg">
+                  <svg className="w-4 h-4 text-background" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
+                  </svg>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
